@@ -32,3 +32,18 @@ peerServer.on('disconnect', (client) => {
 });
 
 console.log('PeerJS mounted at /peerjs');
+
+const { PeerServer } = require('peer');
+
+const peerServer = PeerServer({
+    port: process.env.PORT || 9000,
+    path: '/peerjs',
+    proxied: true,
+    allow_discovery: true,
+    cors: {
+        origin: '*',
+        methods: ['GET', 'POST'],
+    }
+});
+
+console.log('PeerJS signaling server running on /peerjs');
