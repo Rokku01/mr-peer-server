@@ -1,35 +1,29 @@
-const express = require('express');
-const { ExpressPeerServer } = require('peer');
+const { PeerServer } = require('peer');
 
-const app = express();
-const server = app.listen(process.env.PORT || 9000, () => {
-    console.log('Server listening on port ' + (process.env.PORT || 9000));
+const port = process.env.PORT || 9000;
+
+const peerServer = PeerServer({
+    port: port,
+    path: '/peerjs',
+    proxied: true,
+    allow_discovery: true,
+    debug: true
 });
 
-// Mount PeerJS at /peerjs WITHOUT setting a path option
-const peerServer = ExpressPeerServer(server, {
-    debug: true,
-    proxied: true
+console.log('PeerJS server running on port ' + port + ' at path /peerjs');
+
+peerServer.on('connection', (client) => {
+    console.log('Client connected: ' + client.getId());
 });
 
-app.use('/peerjs', peerServer);
-
-// Request logger — shows up in Render logs so we can see what's being hit
-app.use((req, res, next) => {
-    console.log(req.method + ' ' + req.path);
-    next();
+peerServer.on('disconnect', (client) => {
+    console.log('Client disconnected: ' + client.getId());
 });
 
-// Homepage
-app.get('/', (req, res) => {
-    res.send('PeerJS server is running. Try /peerjs/id');
-});
-
-// Catch-all for /peerjs/* so we get a clear message instead of generic 404
-app.use('/peerjs', (req, res) => {
-    res.status(404).send('PeerJS route not found: ' + req.path);
+peerServer.on('error', (err) => {
+    console.error('Server error:', err);
 });
 
 process.on('uncaughtException', (err) => {
-    console.error('Uncaught error:', err);
+    console.error('Uncaught:', err);
 });
