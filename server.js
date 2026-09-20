@@ -6,22 +6,30 @@ const server = app.listen(process.env.PORT || 9000, () => {
     console.log('Server listening on port ' + (process.env.PORT || 9000));
 });
 
+// Mount PeerJS at /peerjs WITHOUT setting a path option
 const peerServer = ExpressPeerServer(server, {
     debug: true,
-    path: '/',
-    proxied: true,
-    allow_discovery: true
+    proxied: true
 });
 
-// Mount the PeerJS server at /peerjs
 app.use('/peerjs', peerServer);
 
-// A simple homepage so we can see it's alive
+// Request logger — shows up in Render logs so we can see what's being hit
+app.use((req, res, next) => {
+    console.log(req.method + ' ' + req.path);
+    next();
+});
+
+// Homepage
 app.get('/', (req, res) => {
     res.send('PeerJS server is running. Try /peerjs/id');
 });
 
-// Log any errors
+// Catch-all for /peerjs/* so we get a clear message instead of generic 404
+app.use('/peerjs', (req, res) => {
+    res.status(404).send('PeerJS route not found: ' + req.path);
+});
+
 process.on('uncaughtException', (err) => {
     console.error('Uncaught error:', err);
 });
