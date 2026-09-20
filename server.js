@@ -3,47 +3,21 @@ const { ExpressPeerServer } = require('peer');
 
 const app = express();
 
+// Root route — just a health check
 app.get('/', (req, res) => {
-    res.json({
-        status: 'ok',
-        message: 'PeerJS signaling server is running',
-        testUrl: '/peerjs/id'
-    });
+    res.send('PeerJS signaling server is running. Test: /peerjs/id');
 });
 
+// Start the HTTP server
 const server = app.listen(process.env.PORT || 9000, () => {
-    console.log('Server listening on port ' + (process.env.PORT || 9000));
+    console.log('Server listening on port', process.env.PORT || 9000);
 });
 
+// Attach PeerJS to the HTTP server
 const peerServer = ExpressPeerServer(server, {
-    path: '/',
-    proxied: true,
-    allow_discovery: true
+    debug: true,
+    path: '/'
 });
 
+// Mount PeerJS at /peerjs
 app.use('/peerjs', peerServer);
-
-peerServer.on('connection', (client) => {
-    console.log('Peer connected: ' + client.getId());
-});
-
-peerServer.on('disconnect', (client) => {
-    console.log('Peer disconnected: ' + client.getId());
-});
-
-console.log('PeerJS mounted at /peerjs');
-
-const { PeerServer } = require('peer');
-
-const peerServer = PeerServer({
-    port: process.env.PORT || 9000,
-    path: '/peerjs',
-    proxied: true,
-    allow_discovery: true,
-    cors: {
-        origin: '*',
-        methods: ['GET', 'POST'],
-    }
-});
-
-console.log('PeerJS signaling server running on /peerjs');
